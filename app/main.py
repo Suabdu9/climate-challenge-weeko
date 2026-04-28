@@ -8,46 +8,58 @@ import os
 # PAGE CONFIG
 # -----------------------
 st.set_page_config(page_title="Climate Dashboard", layout="wide")
+st.title("🌍 Climate Comparison Dashboard")
 
 # -----------------------
-# TITLE
+# GOOGLE DRIVE LINKS
 # -----------------------
-st.title("🌍 Climate Comparison Dashboard")
+drive_links = {
+    "Ethiopia": "https://drive.google.com/uc?id=1Mv9tkVgRMz3O3Pa7LMMtC6y85GDoydB2",
+    "Kenya": "https://drive.google.com/uc?id=14-yg9tImS4yVveJm8gc_ZlSjS2lcjPjB",
+    "Sudan": "https://drive.google.com/uc?id=1b8qFKKGkZIc0SgsL9ts41z6qecxq4ejo",
+    "Tanzania": "https://drive.google.com/uc?id=1HfnpyS-sTMA5SlItPjtNafjfTkZRIsmW",
+    "Nigeria": "https://drive.google.com/uc?id=18xvYOiizqDdoMRJt0879EAIUX8qzz6Yq",
+}
 
 # -----------------------
 # LOAD DATA FUNCTION
 # -----------------------
 @st.cache_data
-def load_data(countries, data_dir="data", sample_only=False, sample_rows=5000):
-    df_list = []
-
-    file_map = {
-        "Ethiopia": "ethiopia_clean.csv",
-        "Kenya": "kenya_clean.csv",
-        "Sudan": "sudan_clean.csv",
-        "Tanzania": "tanzania_clean.csv",
-        "Nigeria": "nigeria_clean.csv"
-    }
+def load_data(countries, sample_only=True, sample_rows=5000):
+    frames = []
 
     for country in countries:
-        file_path = os.path.join(data_dir, file_map[country])
 
+        # ---------- TRY LOCAL FIRST ----------
+        local_path = f"data/{country.lower()}_clean.csv"
+
+        if os.path.exists(local_path):
+            try:
+                df = pd.read_csv(local_path)
+                df["Country"] = country
+                frames.append(df)
+                continue
+            except Exception as e:
+                st.warning(f"Local load failed for {country}: {e}")
+
+        # ---------- FALLBACK TO DRIVE ----------
         try:
-            df = pd.read_csv(file_path)
+            url = drive_links[country]
+            df = pd.read_csv(url)
 
             if sample_only:
                 df = df.head(sample_rows)
 
             df["Country"] = country
-            df_list.append(df)
+            frames.append(df)
 
-        except FileNotFoundError:
-            st.warning(f"{country} data not found in {data_dir}")
+        except Exception as e:
+            st.warning(f"Drive load failed for {country}: {e}")
 
-    if len(df_list) == 0:
+    if len(frames) == 0:
         return pd.DataFrame()
 
-    df = pd.concat(df_list)
+    df = pd.concat(frames, ignore_index=True)
 
     # Date processing
     df["Date"] = pd.to_datetime(df["Date"])
@@ -56,7 +68,7 @@ def load_data(countries, data_dir="data", sample_only=False, sample_rows=5000):
     return df
 
 # -----------------------
-# SIDEBAR FILTERS
+# SIDEBAR
 # -----------------------
 all_countries = ["Ethiopia", "Kenya", "Sudan", "Tanzania", "Nigeria"]
 
@@ -77,7 +89,7 @@ df = load_data(selected_countries, sample_only=sample_only)
 # HANDLE EMPTY DATA
 # -----------------------
 if df.empty:
-    st.error("No data found. Ensure CSV files exist in the data/ directory.")
+    st.error("No data could be loaded. Check local files or Google Drive links.")
     st.stop()
 
 # -----------------------
@@ -111,6 +123,7 @@ fig, ax = plt.subplots()
 sns.boxplot(data=df, x="Country", y="PRECTOTCORR", ax=ax)
 ax.set_xlabel("Country")
 ax.set_ylabel("Precipitation")
+
 st.pyplot(fig)
 
 # -----------------------
