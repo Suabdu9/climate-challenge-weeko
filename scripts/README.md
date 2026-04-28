@@ -33,16 +33,7 @@ This Streamlit application provides an interactive dashboard to explore climate 
 6. Run the Streamlit app:
    streamlit run app/main.py
 
-## Notes
-- The application reads data from local CSV files stored in the `data/` directory.
-- The `data/` folder is excluded from version control using `.gitignore`.
+## Data Source
 
-## Data Handling
-
-The app uses a flexible data loading function that supports:
-- Loading multiple country datasets
-- Handling missing files gracefully
-- Optional sampling for performance
-
-If data files are not present, the app will display a warning instead of crashing.
-
+The dashboard reads data from external Google Drive links instead of local files. 
+This ensures the app runs correctly in deployment while keeping the repository lightweight.
