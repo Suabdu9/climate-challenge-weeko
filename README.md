@@ -71,6 +71,17 @@ This project uses GitHub Actions to automatically install dependencies and verif
 
 The dataset is sourced from NASA POWER and contains daily climate observations (2015–2026) for selected African countries. Variables include temperature, precipitation, humidity, wind speed, and atmospheric pressure.
 
+## Dashboard
+
+To run locally:
+streamlit run app/main.py
+
+Features:
+- Country selection
+- Year range filtering
+- Temperature trends
+- Precipitation distribution
+
 
 ## Notes
 
